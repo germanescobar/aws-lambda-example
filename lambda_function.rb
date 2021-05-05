@@ -3,15 +3,22 @@ require 'selenium-webdriver'
 require 'capybara'
 
 def lambda_handler(event:, context:)
-  Capybara.javascript_driver = :chrome
+  Capybara.register_driver :chrome_headless do
+    options = Selenium::WebDriver::Chrome::Options.new
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--window-size=1400,1400')
+    Capybara::Selenium::Driver.new(nil, browser: :chrome, options: options)
+  end
+  Capybara.javascript_driver = :chrome_headless
   Capybara.configure do |config|
     config.default_max_wait_time = 10 # seconds
-    config.default_driver = :selenium_chrome_headless
+    config.default_driver = :chrome_headless
   end
 
   # Visit
   browser = Capybara.current_session
-  driver = browser.driver.browser
   browser.visit "https://flag.dol.gov/auth/auth/login-gov/login/loa-1"
   browser.find('#user_email').set("alvarezhamilton@gmail.com")
   browser.find('#user_password').set("BASS-inflow-roadway")
